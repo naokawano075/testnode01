@@ -1,16 +1,40 @@
 const http = require('http');
+const fs = require('fs');
+const ejs = require('ejs');
+const url = require('url');
 
-var server = http.createServer(
-    (request,response)=>{
-        response.setHeader('Content-Type', 'text/html');
-        response.write('<DOCTYPE html><html lang="ja">');
-        response.write('<head><meta charset="utf-8">');
-        response.write('<title>Hello</title></head>');
-        response.write('<body><h1>Hello Node.js</h1>');
-        response.write('<p><This is Node.js sample page.></p>');
-        response.write('<p>これはNode.jsのサンプルページです。</p>', 'utf8');
-        response.write('</body></html>');
-        response.end();
-    }
-);
+const index_page = fs.readFileSync('./index.ejs', 'utf8')
+const style_css = fs.readFileSync('./style.css', 'utf8')
+
+var server = http.createServer(getFromClient);
+
 server.listen(3000);
+console.log('server start!');
+
+
+function getFromClient(request,response){
+    var url_parts = url.parse(request.url)
+    switch(url_parts.pathname){
+        case '/':
+            var content = ejs.render(index_page, {
+                title:"Index",
+                content:"これはテンプレートを使ったサンプルページです。"
+            });
+            response.writeHead(200, {'Content-type': 'text/html'});
+            response.write(content);
+            response.end();
+            break;
+
+        case '/style.css':
+            response.writeHead(200, {'Content-type': 'text/css'});
+            response.write(style_css);
+            response.end();
+            break;
+        
+        default:
+            response.writeHead(200, {'Content-type': 'text/plain'});
+            response.write('no page...');
+            response.end();
+            break;
+    }
+}
